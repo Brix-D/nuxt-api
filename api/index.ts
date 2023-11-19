@@ -1,6 +1,5 @@
 import { $fetch, FetchError, type $Fetch } from 'ofetch';
 import { H3Error, sendRedirect } from 'h3';
-import { navigateTo } from '#imports';
 import { useAccessToken } from '../composables/useAccessToken';
 
 const HTTP_METHODS = ['get', 'post', 'put', 'delete', 'patch'];
