@@ -1,6 +1,7 @@
 import { $fetch, FetchError, type $Fetch } from 'ofetch';
 import { H3Error, sendRedirect } from 'h3';
 import { useAccessToken } from '../composables/useAccessToken';
+import { useAsyncData, navigateTo, createError } from '#imports';
 
 const HTTP_METHODS = ['get', 'post', 'put', 'delete', 'patch'];
 const HTTP_NOT_FATAL_ERRORS = [
