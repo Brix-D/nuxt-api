@@ -165,7 +165,7 @@ export class Api {
             try {
                 return await request();
             } catch (error: unknown) {
-                if (error instanceof Error) {
+                if (error instanceof FetchError || error instanceof H3Error) {
                     const retry = await this.handleError(error, accessToken, navigateTo);
                     if (retry) {
                         return await request();
