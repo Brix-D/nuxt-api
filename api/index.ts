@@ -182,11 +182,13 @@ export class Api {
         }
         if (status) {
             const isFatal = !HTTP_NOT_FATAL_ERRORS.includes(status);
-            if (!this.token) {
-                // await navigateTo(this.unauthorisedRedirectUrl, { replace: true, external: true });
-                throw createError({ fatal: isFatal, statusCode: 401 });
-            }
+           
             if (status === 401 && this.refreshOptions !== undefined) {
+                if (!this.token) {
+                    // await navigateTo(this.unauthorisedRedirectUrl, { replace: true, external: true });
+                    throw createError({ fatal: isFatal, statusCode: status });
+                }
+
                 if (!this.refresh) {
                     this.refresh = this.handleRefreshToken(accessToken);
                     try {
@@ -195,7 +197,7 @@ export class Api {
                         return true;
                     } catch (error: unknown) {
                         // await navigateTo(this.unauthorisedRedirectUrl, { replace: true, external: true });
-                        throw createError({ fatal: isFatal, statusCode: 401 });
+                        throw createError({ fatal: isFatal, statusCode: status });
                     }
                 } else {
                     try {
