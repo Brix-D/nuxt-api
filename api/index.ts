@@ -144,24 +144,24 @@ export class Api {
         }
 
         const accessToken = useAccessToken(this.accessTokenName);
-        if (method === 'get') {
-            const { data, error, refresh } = await useAsyncData(async () => {
-                try {
-                    return await request();
-                } catch (error: unknown) {
-                    if (error instanceof FetchError) {
-                        const retry = await this.handleError(error, accessToken, navigateTo);
-                        if (retry) {
-                            return await request();
-                        }
-                    }
-                }
-            });
-            if (error.value) {
-                throw error;
-            }
-            return data.value;
-        } else {
+        // if (method === 'get') {
+        //     const { data, error, refresh } = await useAsyncData(async () => {
+        //         try {
+        //             return await request();
+        //         } catch (error: unknown) {
+        //             if (error instanceof FetchError) {
+        //                 const retry = await this.handleError(error, accessToken, navigateTo);
+        //                 if (retry) {
+        //                     return await request();
+        //                 }
+        //             }
+        //         }
+        //     });
+        //     if (error.value) {
+        //         throw error;
+        //     }
+        //     return data.value;
+        // } else {
             try {
                 return await request();
             } catch (error: unknown) {
@@ -172,7 +172,7 @@ export class Api {
                     }
                 }
             }
-        }
+       // }
     }
 
     private async handleError(error: FetchError | H3Error, accessToken: ReturnType<typeof useAccessToken>, navigate: typeof navigateTo) {
@@ -185,6 +185,10 @@ export class Api {
         }
         if (status) {
             const isFatal = !HTTP_NOT_FATAL_ERRORS.includes(status);
+            if (!this.token) {
+                await navigate(this.unauthorisedRedirectUrl, { replace: true, external: true });
+                return false;
+            }
             if (status === 401 && this.refreshOptions !== undefined) {
                 if (!this.refresh) {
                     this.refresh = this.handleRefreshToken(accessToken);
@@ -204,10 +208,9 @@ export class Api {
                     } catch (error: unknown) {
                         return false;
                     }
-                    
                 }
-                
             }
+
             throw createError({ fatal: isFatal, statusCode: status, data: error.data });
         }
         return false;
@@ -226,7 +229,6 @@ export class Api {
                 }
                 const options: RequestOptions = { method: this.refreshOptions.method, headers: this.getHeaders() };
                 const { [this.accessTokenName]: token } = await this.provider<IRefreshResponse>(this.refreshOptions.url, options);
-                // const { [ACCESS_TOKEN_NAME]: token } = await this.mockRefreshToken();
 
                 this.token = token;
                 accessToken.value = token;
@@ -239,16 +241,8 @@ export class Api {
             }
         });
     }
-
-    private async mockRefreshToken(): Promise<IRefreshResponse> {
-        return new Promise((resolve, reject) => {
-            const response: IRefreshResponse = { [this.accessTokenName]: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vYmVhdXR5Ym94LXN0YWdlLnJ1L2FwaS9hdXRoL2xvZ2luLWJ5LXBob25lIiwiaWF0IjoxNjk3MjIzODg0LCJleHAiOjE3MDkyMjM4ODQsIm5iZiI6MTY5NzIyMzg4NCwianRpIjoiTVZzaTJ0WHFZNlNoSURPTyIsInN1YiI6MTUyLCJwcnYiOiI0ZDNkNjlmZGJhNGExMGZhMjc4YjgxZmM3ZmVkMzdmNjVmN2RjMDIwIiwidXNlcklEIjoxNTIsImFkZHJlc3NJRCI6NjA0NSwic2VjcmV0IjoiekpEamRPMXhub01objJSNiJ9.c4n6nh1ZFuxHUUZpEEecXH9Spu8XNNUimG9MCbIbekw'};
-            setTimeout(() => {
-                resolve(response);
-            }, 1000);
-           
-        });
-    }
 }
+
+export type BApi = ApiMethods & Api;
 
 export default Api;
