@@ -166,7 +166,7 @@ export class Api {
                 return await request();
             } catch (error: unknown) {
                 if (error instanceof FetchError || error instanceof H3Error) {
-                    const retry = await this.handleError(error, accessToken, navigateTo);
+                    const retry = await this.handleError(error, accessToken);
                     if (retry) {
                         return await request();
                     }
@@ -175,7 +175,7 @@ export class Api {
        // }
     }
 
-    private async handleError(error: FetchError | H3Error, accessToken: ReturnType<typeof useAccessToken>, navigate: typeof navigateTo) {
+    private async handleError(error: FetchError | H3Error, accessToken: ReturnType<typeof useAccessToken>) {
         let status: number | null | undefined = null;
         if (error instanceof FetchError) {
             status = error.status;
@@ -186,7 +186,7 @@ export class Api {
         if (status) {
             const isFatal = !HTTP_NOT_FATAL_ERRORS.includes(status);
             if (!this.token) {
-                await navigate(this.unauthorisedRedirectUrl, { replace: true, external: true });
+                await navigateTo(this.unauthorisedRedirectUrl, { replace: true, external: true });
                 return false;
             }
             if (status === 401 && this.refreshOptions !== undefined) {
@@ -197,7 +197,7 @@ export class Api {
                         this.token = token;
                         return true;
                     } catch (error: unknown) {
-                        await navigate(this.unauthorisedRedirectUrl, { replace: true, external: true });
+                        await navigateTo(this.unauthorisedRedirectUrl, { replace: true, external: true });
                     }
                     return false;
                 } else {
