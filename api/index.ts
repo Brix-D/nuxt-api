@@ -1,7 +1,7 @@
 import { $fetch, FetchError, type $Fetch } from 'ofetch';
 import { H3Error, sendRedirect } from 'h3';
 import { useAccessToken } from '../composables/useAccessToken';
-import { useAsyncData, navigateTo, createError } from '#imports';
+import { createError } from '#imports';
 
 const HTTP_METHODS = ['get', 'post', 'put', 'delete', 'patch'];
 const HTTP_NOT_FATAL_ERRORS = [
@@ -60,7 +60,6 @@ interface ApiOptions {
     token?: string | null;
     refresh?: RefreshTokenParams;
     accessTokenName?: string;
-    unauthorisedRedirectUrl: string;
 }
 
 type RequestData = FormData | object | Array<any>;
@@ -78,11 +77,9 @@ export class Api {
     private refresh: Promise<string> | null = null;
     private refreshOptions?: RefreshTokenParams;
     private accessTokenName: string;
-    private unauthorisedRedirectUrl: string;
 
     constructor(apiOptions: ApiOptions) {
         this.accessTokenName = apiOptions.accessTokenName ?? ACCESS_TOKEN_NAME;
-        this.unauthorisedRedirectUrl = apiOptions.unauthorisedRedirectUrl;
         if (this.provider === null) {
             this.token = apiOptions.token;
             this.module = apiOptions.module;
@@ -186,8 +183,8 @@ export class Api {
         if (status) {
             const isFatal = !HTTP_NOT_FATAL_ERRORS.includes(status);
             if (!this.token) {
-                await navigateTo(this.unauthorisedRedirectUrl, { replace: true, external: true });
-                return false;
+                // await navigateTo(this.unauthorisedRedirectUrl, { replace: true, external: true });
+                throw createError({ fatal: isFatal, statusCode: 401 });
             }
             if (status === 401 && this.refreshOptions !== undefined) {
                 if (!this.refresh) {
@@ -197,9 +194,9 @@ export class Api {
                         this.token = token;
                         return true;
                     } catch (error: unknown) {
-                        await navigateTo(this.unauthorisedRedirectUrl, { replace: true, external: true });
+                        // await navigateTo(this.unauthorisedRedirectUrl, { replace: true, external: true });
+                        throw createError({ fatal: isFatal, statusCode: 401 });
                     }
-                    return false;
                 } else {
                     try {
                         const token = await this.refresh;
